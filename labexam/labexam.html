@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Article Comment System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            width: 700px;
+            margin: auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px #ccc;
+        }
+
+        h2 {
+            margin-top: 40px;
+        }
+
+        .stats-box {
+            background: #e8f0fe;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+        }
+
+        .comment-form label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .comment-form input, .comment-form textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid #aaa;
+        }
+
+        .error {
+            color: red;
+            font-size: 14px;
+        }
+
+        .star-rating span {
+            font-size: 30px;
+            cursor: pointer;
+            color: #ccc;
+        }
+
+        .star-rating .selected {
+            color: gold;
+        }
+
+        .comment-card {
+            background: #f0f0f0;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 7px;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: blue;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: darkblue;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>News Article Title</h1>
+    <p>Hi ,this is Arunima Saha's Article</p>
+
+    <h2>💬 Reader Comments</h2>
+
+   
+    <div class="stats-box">
+        <span>Total Comments: <span id="totalComments">0</span></span>
+        <span>Average Rating: <span id="avgRating">0</span></span>
+    </div>
+
+    
+    <form id="commentForm" class="comment-form">
+
+        <label>Name:</label>
+        <input type="text" id="name">
+        <div id="nameError" class="error"></div>
+
+        <label>Email (optional):</label>
+        <input type="text" id="email">
+        <div id="emailError" class="error"></div>
+
+        <label>Your Comment:</label>
+        <textarea id="commentText" rows="4"></textarea>
+        <div id="commentError" class="error"></div>
+
+        <label>Rating (optional):</label>
+        <div class="star-rating" id="ratingStars">
+            <span data-value="1">★</span>
+            <span data-value="2">★</span>
+            <span data-value="3">★</span>
+            <span data-value="4">★</span>
+            <span data-value="5">★</span>
+        </div>
+        <div id="ratingDisplay" style="margin-top:5px; font-weight:bold;"></div>
+
+        <button type="submit">Submit Comment</button>
+    </form>
+
+    <h2>All Comments</h2>
+    <div id="commentList"></div>
+
+</div>
+
+<script>
+    
+    let comments = [];
+    let selectedRating = 0;
+
+    const stars = document.querySelectorAll("#ratingStars span");
+
+    stars.forEach(star => {
+        star.addEventListener("click", function() {
+            selectedRating = parseInt(this.getAttribute("data-value"));
+
+            stars.forEach(s => s.classList.remove("selected"));
+            for(let i = 0; i < selectedRating; i++) {
+                stars[i].classList.add("selected");
+            }
+            document.getElementById("ratingDisplay").innerText = "Selected Rating: " + selectedRating;
+        });
+    });
+
+    
+    document.getElementById("commentForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+
+     
+        const name = document.getElementById("name").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const commentText = document.getElementById("commentText").value.trim();
+
+        const nameError = document.getElementById("nameError");
+        const emailError = document.getElementById("emailError");
+        const commentError = document.getElementById("commentError");
+
+       
+        nameError.innerText = "";
+        emailError.innerText = "";
+        commentError.innerText = "";
+
+        let valid = true;
+
+        
+        if (name.length < 2 || name.length > 50) {
+            nameError.innerText = "Name should be between 2 and 50 characters";
+            valid = false;
+        }
+
+        
+        if (email !== "" && !email.includes("@")) {
+            emailError.innerText = "Please enter a valid email address";
+            valid = false;
+        }
+
+        
+        if (commentText.length < 10 || commentText.length > 500) {
+            commentError.innerText = "Comment should between 10 and 500 characters";
+            valid = false;
+        }
+
+        if (!valid) return;
+
+        
+        comments.push({
+            name,
+            email,
+            commentText,
+            rating: selectedRating
+        });
+
+        
+        document.getElementById("name").value = "";
+        document.getElementById("email").value = "";
+        document.getElementById("commentText").value = "";
+        selectedRating = 0;
+        stars.forEach(s => s.classList.remove("selected"));
+        document.getElementById("ratingDisplay").innerText = "";
+
+        updateComments();
+        updateStatistics();
+    });
+
+    
+    function updateComments() {
+        const list = document.getElementById("commentList");
+        list.innerHTML = "";
+
+        comments.forEach(c => {
+            let div = document.createElement("div");
+            div.className = "comment-card";
+
+            div.innerHTML = `
+                <strong>${c.name}</strong> (${c.email || "No Email"})<br>
+                <p>${c.commentText}</p>
+                <strong>Rating: ${c.rating || "No Rating"}</strong>
+            `;
+
+            list.appendChild(div);
+        });
+    }
+
+   
+    function updateStatistics() {
+        document.getElementById("totalComments").innerText = comments.length;
+
+        let ratings = comments.filter(c => c.rating > 0).map(c => c.rating);
+
+        let average = ratings.length > 0
+            ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(2)
+            : 0;
+
+        document.getElementById("avgRating").innerText = average;
+    }
+</script>
+
+</body>
+</html>
